@@ -1,0 +1,34 @@
+#
+# Sensor range is not configurable, because there is no reason
+# to assume that all ranges are the same.
+#
+# Colors can be expressed (only) as a comma-separated list of
+# r-g-b values, e.g., "255,255,255" is "white".
+#
+
+dsn.logging=warning
+dsn.multicast.net=224.0.1.20
+dsn.multicast.port=8181
+dsn.sector.dimension=150
+dsn.sector.rows=2
+dsn.sector.columns=3
+dsn.sector.stepSize=10
+dsn.sensors.per.sector=15
+dsn.target.movement.interval=150
+dsn.target.width=10
+dsn.target.height=10
+#dsn.target.behavior=dsn.SouthwestToNortheastTrek
+dsn.target.behavior=dsn.Cockroach
+dsn.visual.target.width=6
+dsn.visual.target.height=6
+dsn.visual.sensor.width=8
+dsn.visual.sensor.height=8
+dsn.visual.app.window.width=400
+dsn.visual.app.window.height=125
+dsn.visual.grid.color=184,167,138
+dsn.visual.sensor.color=250,250,100
+dsn.visual.alerted.sensor.color=250,20,20
+dsn.visual.target.color=64,64,64
+
+duck=Daffy
+cat=Felix

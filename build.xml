@@ -1,0 +1,197 @@
+<project name="DSN" default="compile" basedir=".">
+
+  <!--build properties-->
+  <property name="src" value="src"/>
+  <property name="config" value="conf"/>
+  <property name="build" value="build"/>
+  <property name="bin" value="bin"/>
+  <property name="lib" value="lib"/>
+  <property name="junit.results" value="test-results"/>
+  <property name="build.classes" value="${build}/classes"/>
+  <property name="javadoc" value="docs/api"/>
+  <property file="conf/ant.properties"/>
+
+  <!--distribution properties-->
+  <property name="product.name" value="DSN"/>
+  <property name="dist.name" value="dsn"/>
+  <property name="version" value=""/>
+  <property name="dist" value="dist"/>
+  <property name="dist.product" value="${dist}/${product.name}"/>
+  <property name="dist.root" value="${dist}/${dist.name}"/>
+  <property name="dist.bin" value="${dist.root}/bin"/>
+  <property name="dist.config" value="${dist.root}/conf"/>
+  <property name="dist.docs" value="${dist.root}/docs"/>
+  <property name="dist.lib" value="${dist.root}/lib"/>
+  <property name="dist.jar" value="${dist.name}${version}.jar"/>
+  <property name="dist.zip" value="${dist.name}${version}.zip"/>
+
+  <path id="classpath">
+    <pathelement path="${config}"/>
+    <pathelement path="${build.classes}"/>
+    <!--include standard jars -->
+    <fileset dir="${lib}">
+      <include name="**/*.jar"/>
+      <include name="**/*.zip"/>
+    </fileset>
+  </path>
+
+  <!-- source files -->
+  <patternset id="sources.main" >
+  <include name="dsn/**/*.java"/>
+  </patternset>
+
+  <!-- ************************* taskdefs ************************* -->
+  
+  <taskdef name="junit"
+    classname="org.apache.tools.ant.taskdefs.optional.junit.JUnitTask"/>
+
+  <!-- ***************** init ************************************* -->
+  <target name="init">
+    <tstamp>
+      <format property="DSTAMP" pattern="MM-d-yyyy-HH.mm.ss"/>
+    </tstamp>
+
+    <mkdir dir="${build.classes}"/>
+
+    <!--copy images over -->
+    <copy todir="${build.classes}">
+      <fileset dir="${src}">
+        <include name="**/*.jpg"/>
+        <include name="**/*.gif"/>
+        <include name="**/*.png"/>
+        <exclude name="build/"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <!-- **************** compile *********** -->
+
+  <target name="compile" depends="init">
+    <javac srcdir="${src}" destdir="${build.classes}" 
+        classpathref="classpath" debug="on">
+      <patternset refid="sources.main"/>
+    </javac>
+  </target>
+
+  <!-- ****************************** clean ********************* -->
+
+  <target name="clean" depends="">
+    <!-- Delete the ${build.classes} and ${dist} directory trees. -->
+
+    <delete quiet="true" dir="${build.classes}"/>
+    <delete quiet="true" dir="${dist}"/>
+    <delete quiet="true" dir="${javadoc}"/>
+    <delete quiet="true" dir="${junit.results}"/>
+
+    <!-- Delete all compiled class files in src.-->
+    <delete quiet="true">
+      <fileset dir="${src}" includes="**/*.class"/>
+    </delete>
+  </target>
+
+  <!-- ****************************** test ********************* -->
+
+  <target name="test" depends="compile">
+  <delete quiet="true" dir="${junit.results}"/>
+  <mkdir dir="${junit.results}"/>
+  <junit printsummary="true" haltonerror="true" haltonfailure="true">
+    <classpath refid="classpath"/>
+    <formatter usefile="true" type="plain"/>
+
+    <!-- tests that should be forked -->
+    <batchtest fork="true" todir="${junit.results}">
+    <fileset dir="${src}">
+      <include name="**/Test*.java"/>
+    </fileset>
+    </batchtest>
+  </junit>
+  </target>
+
+  <!-- *********************  run class  ******************** -->
+
+  <!--
+    Run an arbitrary program supplied on the ant command line via
+    the "rc" property (rc stands for "run class").
+    Example usage:
+      ant -Drc=dsn.test.somedir.HelloWorld rc
+  -->
+
+  <target name="rc" depends="">
+    <java classname="${rc}"
+      classpathref="classpath"
+      fork="true">
+    </java>
+  </target>
+
+  <!-- *********************  javadoc  ********************** -->
+  <target name="javadoc" depends="compile">
+    <mkdir dir="${javadoc}"/>
+    
+    <javadoc packagenames="dsn.*"
+             excludepackagenames="dsn.test,dsn.test.*"
+             sourcepath="${src}"
+             destdir="docs/api"
+             author="true"
+             version="true"
+             use="true"
+             windowtitle="${product.name} ${version} API">
+      <doctitle><![CDATA[<h1>${product.name} Javadoc</h1>]]></doctitle>
+      <bottom><![CDATA[<i>Copyright &#169; 2002, 2003 Jerry Smith. All Rights
+        Reserved.</i>]]></bottom>
+      <classpath>
+        <fileset dir="lib">
+          <include name="**/*.jar"/>
+        </fileset>
+      </classpath>
+    </javadoc>
+  </target>
+
+  <!-- ********************************************************* -->
+
+  <!-- ****************************** dist ********************* -->
+
+  <target name="dist" depends="compile,javadoc">
+    <delete quiet="true" dir="${dist}"/>
+    <!-- Create the distribution directory -->
+    <mkdir dir="${dist}"/>
+    <!-- Create the encapsulating directory -->
+    <mkdir dir="${dist.root}"/>
+    <!--create the directories for the JAR file(s), etc. -->
+    <mkdir dir="${dist.lib}"/>
+    <mkdir dir="${dist.bin}"/>
+    <mkdir dir="${dist.config}"/>
+
+    <delete quiet="true" file="${dist.lib}/${dist.jar}"/>
+
+    <jar jarfile="${dist.lib}/${dist.jar}">
+      <fileset dir="${build.classes}">
+        <exclude name="dsn/test/**"/>
+        <exclude name="dsn/TimeCriticalTargeting*.*"/>
+      </fileset>
+    </jar>
+
+    <copy file="README.txt" todir="${dist.root}"/>
+
+    <copy file="${config}/dsn.properties" todir="${dist.config}"/>
+    <copy file="${config}/yaak.properties" todir="${dist.config}"/>
+    <copy file="${lib}/yaak.jar" todir="${dist.lib}"/>
+
+    <copy todir="${dist.bin}">
+      <fileset dir="${bin}">
+      </fileset>
+    </copy>
+
+    <copy todir="${dist.docs}/api">
+      <fileset dir="${javadoc}">
+      </fileset>
+    </copy>
+
+    <zip zipfile="${dist}/${dist.zip}"
+      basedir="${dist}"
+      includes="${dist.name}/**/"
+    />
+  </target>
+
+  <!-- *************************************************** -->
+
+</project>
